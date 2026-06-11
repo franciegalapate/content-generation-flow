@@ -1,56 +1,95 @@
-# {{crew_name}} Crew
+# Guide Creator Flow
 
-Welcome to the {{crew_name}} Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+A CrewAI-powered flow that generates comprehensive, audience-tailored guides on any topic using local LLMs via Ollama.
+
+## Overview
+
+This project uses a CrewAI Flow to orchestrate a multi-step guide creation process:
+
+1. **User Input** — prompts for a topic and audience level (beginner/intermediate/advanced)
+2. **Outline Generation** — uses a direct LLM call to produce a structured JSON outline
+3. **Content Writing** — a CrewAI content crew writes each section sequentially, with context from previous sections
+4. **Compilation** — assembles all sections into a single Markdown guide
+
+Output is saved to the `output/` directory:
+
+- `output/guide_outline.json` — the structured outline
+- `output/complete_guide.md` — the final compiled guide
+
+## Requirements
+
+- Python >=3.10, <3.13
+- [uv](https://docs.astral.sh/uv/) for dependency management
+- [Ollama](https://ollama.com) running locally with `llama3.2` pulled
 
 ## Installation
 
-Ensure you have Python >=3.10 <3.13 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
-
-First, if you haven't already, install uv:
+1. Install `uv` if you haven't already:
 
 ```bash
 pip install uv
 ```
 
-Next, navigate to your project directory and install the dependencies:
+2. Install project dependencies:
 
-(Optional) Lock the dependencies and install them by using the CLI command:
 ```bash
 crewai install
 ```
 
-### Customizing
+3. Pull the required Ollama model:
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+```bash
+ollama pull llama3.2
+```
 
-- Modify `src/guide_creator_flow/config/agents.yaml` to define your agents
-- Modify `src/guide_creator_flow/config/tasks.yaml` to define your tasks
-- Modify `src/guide_creator_flow/crew.py` to add your own logic, tools and specific args
-- Modify `src/guide_creator_flow/main.py` to add custom inputs for your agents and tasks
+4. Make sure Ollama is running:
+
+```bash
+ollama serve
+```
+
+> If you see `address already in use`, Ollama is already running — that's fine.
 
 ## Running the Project
 
-To kickstart your flow and begin execution, run this from the root folder of your project:
+From the root of the project:
 
 ```bash
-crewai run
+uv run kickoff
 ```
 
-This command initializes the guide_creator_flow Flow as defined in your configuration.
+You'll be prompted to enter a topic and audience level, then the flow will generate your guide automatically.
 
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+## Configuration
 
-## Understanding Your Crew
+The LLM is configured to use Ollama locally in `src/guide_creator_flow/main.py`:
 
-The guide_creator_flow Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+```python
+llm = LLM(
+    model="ollama/llama3.2",
+    base_url="http://localhost:11434"
+)
+```
 
-## Support
+To use a different model, change `ollama/llama3.2` to any model you have pulled (check with `ollama list`).
 
-For support, questions, or feedback regarding the {{crew_name}} Crew or crewAI.
+To customize agents and tasks, edit:
 
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
+- `src/guide_creator_flow/crews/content_crew/config/agents.yaml`
+- `src/guide_creator_flow/crews/content_crew/config/tasks.yaml`
 
-Let's create wonders together with the power and simplicity of crewAI.
+## Project Structure
+
+```
+guide_creator_flow/
+├── src/guide_creator_flow/
+│   ├── main.py                  # Flow definition and LLM logic
+│   └── crews/content_crew/      # CrewAI crew for writing sections
+│       ├── content_crew.py
+│       └── config/
+│           ├── agents.yaml
+│           └── tasks.yaml
+├── output/                      # Generated guides appear here
+├── pyproject.toml
+└── README.md
+```
